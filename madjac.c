@@ -19,22 +19,7 @@ int * ListaVizinho(struct MatrizAdjacencia * Matriz, int a);//retorna um vetor c
 
 int main(){
 	MatrizAdjacencia * Grafo=CriaMatrizAdjacencia(5);
-	
-	AdicionaVertice(Grafo);
-	AdicionaVertice(Grafo);
-	AdicionaVertice(Grafo);
-	
-	AdicionaAresta(Grafo, 0, 0, 0);
-	AdicionaAresta(Grafo, 0, 1, 0);
-	AdicionaAresta(Grafo, 0, 2, 0);
-	AdicionaAresta(Grafo, 1, 2, 0);
-	
-	int i, *listavizinhos=ListaVizinho(Grafo, 0);
-	
-	for(i=0;listavizinhos[i]!=-1;i++)
-		printf("%i ", listavizinhos[i]);
-	
-	ImprimeMatrizAdjacencia(Grafo);
+
 	return 0;
 }
 
