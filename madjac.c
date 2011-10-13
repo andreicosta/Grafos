@@ -1,156 +1,28 @@
+//ideias para uma matriz de adjacencia e alguns algoritmos relativos a ela
+
 #include <stdio.h>
 #include <stdlib.h>
+//e outros includes mais
 
-typedef struct MatrizAdjacencia{
-	int ** matriz;
-	int * vetor;
-	int nvertices;
-	int tamanho;	
-} MatrizAdjacencia;
-
-MatrizAdjacencia * CriaMatrizAdjacencia(int tamanhoinicial);
-int ImprimeMatrizAdjacencia(struct MatrizAdjacencia * Matriz);
-int DobraMatriz(struct MatrizAdjacencia * Matriz);
-int AdicionaVertice(struct MatrizAdjacencia * Matriz);
-int AdicionaAresta(struct MatrizAdjacencia * Matriz, int a, int b, int direcionado);
-int RetiraAresta(struct MatrizAdjacencia * Matriz, int a, int b, int direcionado);
-int TestaAdjacencia(struct MatrizAdjacencia * Matriz, int a, int b);
-int * ListaVizinho(struct MatrizAdjacencia * Matriz, int a);//retorna um vetor com o nome dos elementos, o final do vetor é marcado por -1
-
-int main(){
-	MatrizAdjacencia * Grafo=CriaMatrizAdjacencia(5);
-
-	return 0;
-}
-
-int AdicionaVertice(struct MatrizAdjacencia * Matriz){
-	if(Matriz->nvertices < Matriz->tamanho){
-		Matriz->vetor[Matriz->nvertices] = 1;
-		Matriz->nvertices += 1;
-		return 1;
-	}
-	else{
-		printf("AdicionaVertice: Nao ha espaco na matriz\n");
-		return 0;
-	}
-}
-
-int RetiraVertice(struct MatrizAdjacencia * Matriz, int posicao){
-	if(Matriz->vetor[posicao] == 0){
-		printf("RetiraVertice: Posicao invalida\n");
-		return -1;
-	}
-	else{
-		Matriz->vetor[posicao] = 1;
-		return 1;
-	}
-}
-
-int AdicionaAresta(struct MatrizAdjacencia * Matriz, int a, int b, int direcionado){
-	if(Matriz==NULL || Matriz->vetor==NULL || Matriz->matriz==NULL){
-		printf("AdicionaAresta: Matriz nula\n");
-		return -1;
-	}
-	
-	if(Matriz->vetor[a] == 1 && Matriz->vetor[b] == 1){
-		if(direcionado == 1){
-			Matriz->matriz[a][b] = 1;
-		}
-		else{
-			Matriz->matriz[a][b] = 1;
-			Matriz->matriz[b][a] = 1;
-		}
-		return 1;
-	}
-	else{
-		return 0;
-	}
-}
-
-int RetiraAresta(struct MatrizAdjacencia * Matriz, int a, int b, int direcionado){
-	if(Matriz==NULL || Matriz->vetor==NULL || Matriz->matriz==NULL){
-		printf("RetiraAresta: Matriz nula\n");
-		return -1;
-	}
-	
-	if(Matriz->vetor[a] == 1 && Matriz->vetor[b] == 1){
-		if(direcionado == 1){
-			Matriz->matriz[a][b] = 0;
-		}
-		else{
-			Matriz->matriz[a][b] = 0;
-			Matriz->matriz[b][a] = 0;
-		}
-		return 1;
-	}
-	else{
-		return 0;
-	}
-}
-
-int TestaAdjacencia(struct MatrizAdjacencia * Matriz, int a, int b){
-	if(Matriz==NULL || Matriz->vetor==NULL || Matriz->matriz==NULL){
-		printf("TestaAdjacencia: Matriz nula\n");
-		return -1;
-	}
-	
-	return Matriz->matriz[a][b] || Matriz->matriz[b][a];
-}
-
-int * ListaVizinho(struct MatrizAdjacencia * Matriz, int a){
-	if(Matriz == NULL || Matriz->vetor == NULL || Matriz->matriz == NULL){
-		printf("ListaVizinho: Matriz nula\n");
-		return NULL;
-	}
-	
-	int i, nvizinhos = 0, *listavizinhos = (int *)malloc(sizeof(int));
-	
-	for(i = 0 ; i < Matriz->nvertices ; i++){
-		if(Matriz->vetor[i] == 1 && (Matriz->matriz[a][i] == 1 || Matriz->matriz[i][a] == 1)){
-			listavizinhos[nvizinhos++] = i;
-			listavizinhos = (int *)realloc(listavizinhos, sizeof(int) * nvizinhos + 1);
-		}
-	}
-	
-	listavizinhos[nvizinhos] = -1;
-	
-	printf("\n");
-	return listavizinhos;
-}
-
-MatrizAdjacencia * CriaMatrizAdjacencia(int tamanhoinicial){
+matrizadjacencia * criamatrizadjacencia(int tamanhoinicial){
 	int i, j;
-	struct MatrizAdjacencia * novo = (struct MatrizAdjacencia *) malloc(sizeof(struct MatrizAdjacencia));
+	struct matrizadjacencia * novo = (struct matrizadjacencia *) malloc(sizeof(struct matrizadjacencia));
 	
-	if(novo == NULL){
-		printf("Cria: Erro ao alocar memoria\n");
+	if(novo == NULL || tamanhoinicial <= 0){
 		return NULL;
 	}
 	
-	if(tamanhoinicial == 0){
-		printf("Cria: Tamanho inicial = 0 não da tche\n");
-		return NULL;
-	}
-	
-	if(tamanhoinicial < 0){
-		printf("Cria: Tamanho negativo?\n");
-		return NULL;
-	}
-	
-	novo->vetor = (int *) malloc(sizeof(int) * tamanhoinicial);
-	
+	novo->vetor = (char **) malloc(sizeof(char *) * tamanhoinicial);
 	novo->matriz = (int **) malloc(sizeof(int *) * tamanhoinicial);
 
 	if(novo->vetor == NULL || novo->matriz == NULL){
-		printf("Cria: Erro ao alocar memoria, sorry\n");
 		return NULL;
 	}
 
 	for(i = 0 ; i < tamanhoinicial ; i++){
-		novo->vetor[i] = 0;
+		novo->vetor[i] = NULL;
 		novo->matriz[i] = (int *) malloc(sizeof(int) * tamanhoinicial);
 		if(novo->matriz[i] == NULL){
-			printf("Cria: Erro ao alocar memoria, desculpa\n");
 			return NULL;
 		}
 		for(j = 0 ; j < tamanhoinicial ; j++){
@@ -159,71 +31,405 @@ MatrizAdjacencia * CriaMatrizAdjacencia(int tamanhoinicial){
 	}
 	
 	novo->tamanho = tamanhoinicial;
-	novo->nvertices = 0;
-
+	
 	return novo;
 }
 
-int ImprimeMatrizAdjacencia(struct MatrizAdjacencia * Matriz){
+int adicionavertice(struct matrizadjacencia * matriz, int id, char * nome){
+	if(matriz == NULL || matriz->vetor == NULL || nome == NULL || matriz->tamanho <= id)
+		return -1;
+	
+	matriz->vetor[id] = (char *) malloc(sizeof(char)*50);
+	strcpy(matriz->vetor[id],nome);
+	return 1;
+}
+
+int delete(struct matrizadjacencia * matriz, int id){
+	if(matriz->tamanho <= id || matriz->vetor[id] == NULL){
+		printf("{\"delete\":{\"ID\":%d,\"resposta\":\"falha\"}}\n", id);
+		return -1;
+	}
+	
+	matriz->vetor[id] = NULL;
+	printf("{\"delete\":{\"ID\":%d,\"resposta\":\"sucesso\"}}\n", id);
+	return 1;
+}
+
+int vizinhos(struct matrizadjacencia * matriz, int id, int direcionado){
+	if(matriz->vetor[id] == NULL || matriz->tamanho <= id || id < 0){
+		printf("{\"vizinhos\":{\"ID\":%d, \"resposta\":\"falha\", \"vizinhos\":[]}}\n", id);
+		return 0;
+	}
+	
+	int cont = 0, i, * lista = malloc(sizeof(int) * matriz->tamanho + 1), primeiro = 1;
+	
+	if(direcionado){
+		for(i=0;i<matriz->tamanho;i++)
+			if((matriz->matriz[id][i] > 0 || matriz->matriz[i][id] > 0) && matriz->vetor[i] != NULL)
+				lista[cont++] = i;
+	}
+	else{
+		for(i=0;i<matriz->tamanho;i++)
+			if(matriz->matriz[id][i] > 0 && matriz->vetor[i] != NULL)
+				lista[cont++] = i;
+	}
+	lista[cont] = -1;
+	
+	printf("{\"vizinhos\":{\"ID\":%d, \"resposta\":\"sucesso\", \"vizinhos\":[", id);
+	for(i = 0 ; lista[i] != -1 ; i++){
+		if(primeiro){
+			primeiro = 0;
+			printf("%d", lista[i]);
+		}
+		else
+			printf(",%d", lista[i]);
+	}
+	printf("]}}\n");
+	return 1;
+}
+
+int conexao(struct matrizadjacencia * matriz, int aux1, int aux2){
+	if(matriz->vetor[aux1] == NULL || matriz->tamanho <= aux1){
+		printf("{\"conexao\":{\"ID1\":%d, \"ID2\":%d, \"resposta\":\"falha\", \"conexao\":\"\"}}\n", aux1, aux2);
+		return 0;
+	}
+	
+	if(matriz->vetor[aux2] == NULL || matriz->tamanho <= aux2){
+		printf("{\"conexao\":{\"ID1\":%d, \"ID2\":%d, \"resposta\":\"falha\", \"conexao\":\"\"}}\n", aux1, aux2);
+		return 0;
+	}
+	
+	if(matriz->matriz[aux1][aux2] || matriz->matriz[aux2][aux1]){
+		printf("{\"conexao\":{\"ID1\":%d, \"ID2\":%d, \"resposta\":\"sucesso\", \"conexao\":\"sim\"}}", aux1, aux2);
+		return 1;
+	}
+	
+	printf("{\"conexao\":{\"ID1\":%d, \"ID2\":%d, \"resposta\":\"sucesso\", \"conexao\":\"nao\"}}", aux1, aux2);	
+	return 0;
+}
+
+int conexaosemprint(struct matrizadjacencia * matriz, int aux1, int aux2){
+	if(matriz->vetor[aux1] == NULL || matriz->tamanho <= aux1){
+		return 0;
+	}
+	
+	if(matriz->vetor[aux2] == NULL || matriz->tamanho <= aux2){
+		return 0;
+	}
+	
+	if(matriz->matriz[aux1][aux2] || matriz->matriz[aux2][aux1]){
+		return 1;
+	}
+	
+	return 0;
+}
+
+int get(struct matrizadjacencia * matriz, int id){
+	if(matriz->tamanho <= id || matriz->vetor[id] == NULL){
+		printf("{\"vertice\":{\"ID\":%d, \"dado\":\"\", \"resposta\":\"falha\"}}\n", id);
+		return 0;
+	}
+	
+	printf("{\"vertice\":{\"ID\":%d, \"dado\":%s, \"resposta\":\"sucesso\"}}\n", id, matriz->vetor[id]);
+	return 1;
+}
+
+int adicionaaresta(struct matrizadjacencia * matriz, int v1, int v2, int peso, int direcionado){
+	if(matriz == NULL || matriz->vetor == NULL || matriz->vetor[v1] == NULL || matriz->vetor[v2] == NULL || matriz->tamanho <= v1 || matriz->tamanho <= v2)
+		return 0;
+	
+	if(direcionado == 1){
+		matriz->matriz[v1][v2] = peso;
+	}
+	if(direcionado == 0){
+		matriz->matriz[v1][v2] = peso;
+		matriz->matriz[v2][v1] = peso;
+	}
+	return 1;
+}
+
+int imprimematrizadjacencia(struct matrizadjacencia * matriz){
 	int i, j;
 	
-	if(Matriz == NULL || Matriz->vetor == NULL || Matriz->matriz == NULL){
+	if(matriz == NULL || matriz->vetor == NULL || matriz->matriz == NULL){
 		printf("Imprime: Matriz nula\n");
 		return -1;
 	}
 	
-	printf("nvert: %i, tam: %i\n\n", Matriz->nvertices, Matriz->tamanho);
-	
-	for(i = 0 ; i < Matriz->tamanho ; i++){
-		printf("%i\t", Matriz->vetor[i]);
+	printf("tam: %d\n\n", matriz->tamanho);
+	for(i = 0 ; i < matriz->tamanho ; i++){
+		printf("%d: %s  ", i, matriz->vetor[i]);
 	}
 	printf("\n");
 	
-	for(i = 0 ; i < Matriz->tamanho ; i++){
+	for(i = 0 ; i < matriz->tamanho ; i++){
 		printf("\n");
-		for(j = 0 ; j<Matriz->tamanho ; j++)
-			printf("%i\t", Matriz->matriz[i][j]);
+		for(j = 0 ; j < matriz->tamanho ; j++)
+			printf("%d\t", matriz->matriz[i][j]);
 	}
 	printf("\n");
 	
 	return 1;
 }
 
-int DobraMatriz(struct MatrizAdjacencia * Matriz){
-	int i, j;
+int verificagrau(struct aresta * arestas, int vertice){
+	int cont = 0, i = 0;
 	
-	if(Matriz == NULL || Matriz->vetor == NULL || Matriz->matriz == NULL){
-		printf("DobraMatriz: Matriz nula\n");
-		return -1;
+	while(arestas[i].v1 != -1){
+		if(arestas[i].v2 == vertice){
+			cont++;
+		}
+		i++;
 	}
 	
-	//Realoca Vetor
-	Matriz->vetor = (int *)realloc(Matriz->vetor, sizeof(int) * Matriz->tamanho * 2);
-	
-	//Realoca Matriz
-	Matriz->matriz = (int **)realloc(Matriz->matriz, sizeof(int *) * Matriz->tamanho * 2);
-	
-	for(i = 0 ; i < Matriz->tamanho ; i++){
-		Matriz->matriz[i] = (int *)realloc(Matriz->matriz[i], sizeof(int) * Matriz->tamanho * 2);
+	return cont;
+}
+
+int ordemtopologica(struct matrizadjacencia * matriz){
+	descpilha * s = initpilha();
+	aresta * arestas = pegaarestas(matriz);
+	int i, aux, arestastam, l[matriz->tamanho], ltam = 0;
+		
+	for(i = 0 ; i < matriz->tamanho ; i++){
+		if(verificagrau(arestas, i) == 0){
+			push(i, s);
+		}
 	}
-	
-	for(i = Matriz->tamanho ; i < Matriz->tamanho * 2 ; i++){
-		Matriz->matriz[i] = (int *)malloc(sizeof(int) * Matriz->tamanho * 2);
+
+	for(i = 0 ; arestas[i].v1 != -1 ; i++){
 	}
-	
-	//Preenche de zeros
-	for(i = Matriz->tamanho ; i < Matriz->tamanho * 2 ; i++){
-		Matriz->vetor[i] = 0;
-		for(j = 0 ; j < Matriz->tamanho * 2 ; j++){
-			Matriz->matriz[i][j] = 0;
-			Matriz->matriz[j][i] = 0;
+	arestastam = i;
+
+	while(s->tamanho > 0){
+		l[ltam++] = pop(s);
+		
+		for(i = 0 ; i < arestastam ; i++){
+			if(arestas[i].v1 == l[ltam-1]){
+				arestas[i].v1 = -2;
+				aux = arestas[i].v2;
+				arestas[i].v2 = -2;
+				if(verificagrau(arestas, aux) == 0){
+					push(aux, s);
+				}
+			}
+		}
+	}
+	ltam--;
+
+	for(i = 0 ; i < arestastam ; i++){
+		if(arestas[i].v1 > -1){
+			return -1;
 		}
 	}
 	
-	//Atualiza tamanho
-	Matriz->tamanho += Matriz->tamanho;
-	
-	printf("expandindo...novo tamanho = %i\n", Matriz->tamanho);
+	printf("{\"ordemtop\":[");
+	for(i=0;i<ltam;i++){
+		printf("%d,", l[i]);
+	}
+	printf("%d]}\n", l[i]);
 
+	free(s);
+	return 1;
+}
+
+aresta * arestasordenadas(struct aresta * vetor){
+	int trocou = 1, tamanho, i;
+	struct aresta aux;
+	
+	for(i = 0 ; vetor[i].v1 != -1 && vetor[i].v2 != -1 && vetor[i].peso != -1 ; i++){
+	}
+	tamanho = i;
+	
+	while(trocou == 1){
+		trocou = 0;
+		for(i = 0 ; i < tamanho - 1 ; i++){
+			if(vetor[i].peso > vetor[i + 1].peso){
+				aux = vetor[i];
+				vetor[i] = vetor[i + 1];
+				vetor[i + 1] = aux;
+				trocou = 1;
+			}
+		}
+	}
+	
+	return vetor;
+}
+
+aresta * pegaarestas(struct matrizadjacencia * matriz){
+	int i, j, tamanho = 0, cont = 0;
+	aresta * arestas = malloc(sizeof(aresta) * matriz->tamanho * matriz->tamanho);
+	
+	for(i = 0 ; i < matriz->tamanho ; i++){
+		for(j = 0 ; j < matriz->tamanho ; j++){
+			if(matriz->matriz[i][j] > 0 && matriz->vetor[i] != NULL && matriz->vetor[j] != NULL){
+				tamanho++;
+			}
+		}
+	}
+	arestas = malloc(sizeof(aresta) * tamanho + 1);
+	for(i = 0 ; i < matriz->tamanho ; i++){
+		for(j = 0 ; j < matriz->tamanho ; j++){
+			if(matriz->matriz[i][j] > 0 && matriz->vetor[i] != NULL && matriz->vetor[j] != NULL){
+				arestas[cont].v1 = i;
+				arestas[cont].v2 = j;
+				arestas[cont].peso = matriz->matriz[i][j];
+				cont++;
+			}
+		}
+	}
+	arestas[tamanho].v1 = -1;
+	arestas[tamanho].v2 = -1;
+	arestas[tamanho].peso = -1;
+	
+	return arestas;
+}
+
+int kruskal(struct matrizadjacencia * matriz, struct aresta * arestas){
+	aresta * t = malloc(sizeof(aresta) * matriz->tamanho - 1);
+	int tamt = 0, i, custo = 0;
+	descpilha * pilha = initpilha();
+	cdisj * cd = initcdisj();
+	
+	for(i = 0 ; i < matriz->tamanho ; i++){
+		makeset(cd, i);
+	}
+	
+	for(i = 0; tamt < matriz->tamanho - 1 && arestas[i].v1 != -1 ; i++){
+		find(cd, arestas[i].v1);
+		find(cd, arestas[i].v2);
+		if(cd->vetor[arestas[i].v1] != cd->vetor[arestas[i].v2]){
+			t[tamt++] = arestas[i];
+			unionc(cd, arestas[i].v1, arestas[i].v2);
+		}
+	}
+	
+	printf("{\"arvoreminima\":{\"arestas\":[");
+	for(i = 0 ; i < tamt - 1 ; i++){
+		printf("(%d,%d),", t[i].v1, t[i].v2);
+		custo += t[i].peso;
+	}
+	printf("(%d,%d)], \"custo\":%d}}\n", t[tamt-1].v1, t[tamt-1].v2, custo + t[tamt - 1].peso);
+
+	free(cd);
+	free(pilha);
+	return 1;
+}
+
+int dijkstra(struct matrizadjacencia * matriz, int source, int target){
+	int infinito = 2147483647, i, dist[matriz->tamanho], previous[matriz->tamanho], u;
+	struct descheap * q = initheap(matriz->tamanho + 2);
+
+	for(i = 0 ; i < matriz->tamanho ; i++){
+		dist[i] = infinito;
+		previous[i] = -1;
+		insereheap(q, &dist[i], i);
+	}
+	dist[source] = 0;
+	setvalor(q, &dist[source], source);
+	
+	while(q->elementos > 0){
+		u = deleteheap(q);
+		
+		if(u == -1){
+			return -1;
+		}
+		
+		for(i = 0 ; i < matriz->tamanho ; i++){
+			if(conexaosemprint(matriz, u, i)){
+				if(dist[i] > dist[u] + matriz->matriz[u][i]){
+					dist[i] = dist[u] + matriz->matriz[u][i];
+					setvalor(q, &dist[i], i);
+					previous[i] = u;
+				}
+			}
+		}
+	}
+	
+	i = target;
+	printf("{\"menorcaminho\":{\"ID1\":%d, \"ID2\":%d, \"caminho\":[", source, target);
+	while(i != source){
+		printf("%d,", i);
+		i = previous[i];
+	}
+	printf("%d],\"custo\":%d}}\n", source, dist[target]);
+
+	free(q);
+	return 1;
+}
+
+int leitor(){
+	int n, i, onde, direcionado = -1, v1, v2, peso, aux1, aux2;
+	char * lido = malloc(sizeof(char) * 10), * nome = malloc(sizeof(char) * 50);
+	matrizadjacencia * matriz = NULL;
+
+	scanf("%s", lido);
+
+	if(!strcmp(lido, "*Vertices")){
+		scanf("%d", &n);
+		matriz = criamatrizadjacencia(n);
+		for(i = 0 ; i < n ; i++){
+			scanf("%d", &onde);
+			scanf("%[ ]", nome);
+			scanf("%[^\n]", nome);
+			adicionavertice(matriz, onde, nome);
+		}
+
+		scanf("%s", lido);
+		
+		if(!strcmp(lido, "*Edges")){
+			direcionado = 0;
+		}
+		if(!strcmp(lido, "*Arcs")){
+			direcionado = 1;
+		}
+		if(direcionado == -1){
+			return 0;
+		}
+		
+		scanf("%s", lido);
+		
+		while(lido != NULL && lido[0] != '*'){
+			v1 = atoi(lido);
+			scanf("%s", lido);
+			v2 = atoi(lido);
+			scanf("%s", lido);
+			peso = atoi(lido);
+			adicionaaresta(matriz, v1, v2, peso, direcionado);
+			scanf("%s", lido);
+		}
+	}
+	
+	if(!strcmp(lido, "*Queries")){
+		while(scanf("%s", lido) != EOF){
+			if(!strcmp(lido, "get")){
+				scanf("%d", &aux1);
+				get(matriz, aux1);				
+			}
+			if(!strcmp(lido, "delete")){
+				scanf("%d", &aux1);
+				delete(matriz, aux1);
+			}
+			if(!strcmp(lido, "vizinhos")){
+				scanf("%d", &aux1);
+				vizinhos(matriz, aux1, direcionado);
+			}
+			if(!strcmp(lido, "conexao")){
+				scanf("%d", &aux1);
+				scanf("%d", &aux2);	
+				conexao(matriz, aux1, aux2);
+			}
+			if(!strcmp(lido, "ordemtopologica")){
+				ordemtopologica(matriz);
+			}
+			if(!strcmp(lido, "arvoreminima")){
+				kruskal(matriz, arestasordenadas(pegaarestas(matriz)));
+			}
+			if(!strcmp(lido, "menorcaminho")){
+				scanf("%d", &aux1);
+				scanf("%d", &aux2);
+				dijkstra(matriz, aux1, aux2);
+			}
+		}
+	}
 	return 1;
 }
