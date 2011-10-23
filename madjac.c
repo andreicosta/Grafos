@@ -341,7 +341,7 @@ int kruskal(struct matrizadjacencia * matriz, struct aresta * arestas){
 }
 
 int dijkstra(struct matrizadjacencia * matriz, int source, int target){
-	int infinito = 2147483647, i, dist[matriz->tamanho], previous[matriz->tamanho], u, hacaminho = 0;
+	int infinito = 2147483647, i, dist[matriz->tamanho], previous[matriz->tamanho], u;
 	struct descheap * q = initheap(matriz->tamanho + 2);
 
 	for(i = 0 ; i < matriz->tamanho ; i++){
@@ -352,18 +352,14 @@ int dijkstra(struct matrizadjacencia * matriz, int source, int target){
 	dist[source] = 0;
 	setvalor(q, &dist[source], source);
 	
-	while(q->elementos > 0 && hacaminho == 0){
+	while(q->elementos > 0){
 		u = deleteheap(q);
-		
-		if(u == target){
-			hacaminho = 1;
-		}
-		
+				
 		if(u == -1){
 			return -1;
 		}
 		
-		if(dist[u] == infinito && hacaminho == 0){
+		if(dist[u] == infinito){
 			break;
 		}
 		
@@ -376,9 +372,13 @@ int dijkstra(struct matrizadjacencia * matriz, int source, int target){
 				}
 			}
 		}
+		
+		if(u == target){
+			break;
+		}
 	}
-	
-	if(hacaminho){
+
+	if(dist[target] != infinito){
 		descpilha * resposta = initpilha();
 		i = target;
 		while(i != source){
@@ -386,17 +386,18 @@ int dijkstra(struct matrizadjacencia * matriz, int source, int target){
 			i = previous[i];
 		}
 		push(source, resposta);
-		printf("{\"menorcaminho\":{\"ID1\":%d, \"ID2\":%d,\"caminho\":[", source, target);
+		printf("{\"menorcaminho\":{\"ID1\":%d, \"ID2\":%d, \"caminho\":[", source, target);
 		while(resposta->tamanho > 1){
 			printf("%d,", pop(resposta));
 		}
 		printf("%d],\"custo\":%d}}\n", pop(resposta), dist[target]);
+		
 		free(resposta);
 	}
 	else{
-		printf("{\"menorcaminho\":{\"ID1\":%d, \"ID2\":%d,\"caminho\":[],\"custo\":}}\n", source, target);
+		printf("{\"menorcaminho\":{\"ID1\":%d, \"ID2\":%d, \"caminho\":[],\"custo\":}}\n", source, target);
 	}
-
+	
 	free(q);
 	return 1;
 }
