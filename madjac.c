@@ -2,7 +2,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-//e outros includes mais
+#include <string.h>
 
 matrizadjacencia * criamatrizadjacencia(int tamanhoinicial){
 	int i, j;
@@ -117,7 +117,7 @@ int conexaosemprint(struct matrizadjacencia * matriz, int aux1, int aux2){
 		return 0;
 	}
 	
-	if(matriz->matriz[aux1][aux2] || matriz->matriz[aux2][aux1]){
+	if(matriz->matriz[aux1][aux2]){
 		return 1;
 	}
 	
@@ -176,32 +176,31 @@ int verificagrau(struct aresta * arestas, int vertice){
 	int cont = 0, i = 0;
 	
 	while(arestas[i].v1 != -1){
-		if(arestas[i].v2 == vertice){
+		if(arestas[i++].v2 == vertice){
 			cont++;
 		}
-		i++;
 	}
 	
 	return cont;
 }
 
 int ordemtopologica(struct matrizadjacencia * matriz){
-	descpilha * s = initpilha();
+	fila * s = initfila();
 	aresta * arestas = pegaarestas(matriz);
 	int i, aux, arestastam, l[matriz->tamanho], ltam = 0;
 		
 	for(i = 0 ; i < matriz->tamanho ; i++){
 		if(verificagrau(arestas, i) == 0){
-			push(i, s);
+			filainsere(i, s);
 		}
 	}
-
+	
 	for(i = 0 ; arestas[i].v1 != -1 ; i++){
 	}
 	arestastam = i;
 
 	while(s->tamanho > 0){
-		l[ltam++] = pop(s);
+		l[ltam++] = filaretira(s);
 		
 		for(i = 0 ; i < arestastam ; i++){
 			if(arestas[i].v1 == l[ltam-1]){
@@ -209,7 +208,7 @@ int ordemtopologica(struct matrizadjacencia * matriz){
 				aux = arestas[i].v2;
 				arestas[i].v2 = -2;
 				if(verificagrau(arestas, aux) == 0){
-					push(aux, s);
+					filainsere(aux, s);
 				}
 			}
 		}
@@ -227,37 +226,66 @@ int ordemtopologica(struct matrizadjacencia * matriz){
 		printf("%d,", l[i]);
 	}
 	printf("%d]}\n", l[i]);
-
+	
 	free(s);
 	return 1;
 }
 
-aresta * arestasordenadas(struct aresta * vetor){
-	int trocou = 1, tamanho, i;
-	struct aresta aux;
-	
-	for(i = 0 ; vetor[i].v1 != -1 && vetor[i].v2 != -1 && vetor[i].peso != -1 ; i++){
-	}
-	tamanho = i;
-	
-	while(trocou == 1){
-		trocou = 0;
-		for(i = 0 ; i < tamanho - 1 ; i++){
-			if(vetor[i].peso > vetor[i + 1].peso){
-				aux = vetor[i];
-				vetor[i] = vetor[i + 1];
-				vetor[i + 1] = aux;
-				trocou = 1;
-			}
+void merge(aresta * vetor, int tamanho) {
+	int i, j, k;
+	aresta * temp;
+ 
+	temp = malloc(sizeof(aresta) * tamanho);
+ 
+	i = 0;
+	j = tamanho/2;
+	k = 0;
+	while(i < tamanho/2 && j < tamanho){
+		if(vetor[i].peso < vetor[j].peso){
+			temp[k++] = vetor[i++];
+		}
+		else{
+			temp[k++] = vetor[j++];
 		}
 	}
+ 
+	if(i == tamanho/2){
+		while(j < tamanho){
+			temp[k++] = vetor[j++];
+		}
+	}
+	else{
+		while(i < tamanho/2){
+			temp[k++] = vetor[i++];
+		}
+	}
+ 
+	for(i = 0; i < tamanho; ++i){
+		vetor[i] = temp[i];
+	}
+}
+ 
+void mergesort(aresta * vetor, int tamanho) {
+	if(tamanho > 1){
+		mergesort(vetor, tamanho/2);
+		mergesort(vetor + tamanho/2, tamanho - tamanho/2);
+		merge(vetor, tamanho);
+	}
+}
+
+aresta * arestasordenadas(struct aresta * vetor){
+	int tamanho;
+	
+	for(tamanho = 0 ; vetor[tamanho].v1 != -1 && vetor[tamanho].v2 != -1 && vetor[tamanho].peso != -1 && vetor!=NULL; tamanho++){
+	}
+	
+	mergesort(vetor, tamanho);
 	
 	return vetor;
 }
 
 aresta * pegaarestas(struct matrizadjacencia * matriz){
 	int i, j, tamanho = 0, cont = 0;
-	aresta * arestas = malloc(sizeof(aresta) * matriz->tamanho * matriz->tamanho);
 	
 	for(i = 0 ; i < matriz->tamanho ; i++){
 		for(j = 0 ; j < matriz->tamanho ; j++){
@@ -266,14 +294,13 @@ aresta * pegaarestas(struct matrizadjacencia * matriz){
 			}
 		}
 	}
-	arestas = malloc(sizeof(aresta) * tamanho + 1);
+	aresta * arestas = malloc(sizeof(aresta) * tamanho + 2);
 	for(i = 0 ; i < matriz->tamanho ; i++){
 		for(j = 0 ; j < matriz->tamanho ; j++){
 			if(matriz->matriz[i][j] > 0 && matriz->vetor[i] != NULL && matriz->vetor[j] != NULL){
 				arestas[cont].v1 = i;
 				arestas[cont].v2 = j;
-				arestas[cont].peso = matriz->matriz[i][j];
-				cont++;
+				arestas[cont++].peso = matriz->matriz[i][j];
 			}
 		}
 	}
@@ -285,20 +312,19 @@ aresta * pegaarestas(struct matrizadjacencia * matriz){
 }
 
 int kruskal(struct matrizadjacencia * matriz, struct aresta * arestas){
-	aresta * t = malloc(sizeof(aresta) * matriz->tamanho - 1);
+	aresta * t = malloc(sizeof(aresta) * matriz->tamanho * matriz->tamanho);
 	int tamt = 0, i, custo = 0;
 	descpilha * pilha = initpilha();
-	cdisj * cd = initcdisj();
-	
+	cdisj * cd = initcdisj(matriz->tamanho);
+
 	for(i = 0 ; i < matriz->tamanho ; i++){
 		makeset(cd, i);
 	}
 	
-	for(i = 0; tamt < matriz->tamanho - 1 && arestas[i].v1 != -1 ; i++){
-		find(cd, arestas[i].v1);
-		find(cd, arestas[i].v2);
-		if(cd->vetor[arestas[i].v1] != cd->vetor[arestas[i].v2]){
+	for(i = 0; arestas[i].v1 != -1 && arestas[i].v2 != -1 && arestas[i].peso != -1 ; i++){
+		if(find(cd, arestas[i].v1) != find(cd, arestas[i].v2)){
 			t[tamt++] = arestas[i];
+			custo += arestas[i].peso;
 			unionc(cd, arestas[i].v1, arestas[i].v2);
 		}
 	}
@@ -306,9 +332,8 @@ int kruskal(struct matrizadjacencia * matriz, struct aresta * arestas){
 	printf("{\"arvoreminima\":{\"arestas\":[");
 	for(i = 0 ; i < tamt - 1 ; i++){
 		printf("(%d,%d),", t[i].v1, t[i].v2);
-		custo += t[i].peso;
 	}
-	printf("(%d,%d)], \"custo\":%d}}\n", t[tamt-1].v1, t[tamt-1].v2, custo + t[tamt - 1].peso);
+	printf("(%d,%d)],\"custo\":%d}}\n", t[tamt-1].v1, t[tamt-1].v2, custo);
 
 	free(cd);
 	free(pilha);
@@ -316,7 +341,7 @@ int kruskal(struct matrizadjacencia * matriz, struct aresta * arestas){
 }
 
 int dijkstra(struct matrizadjacencia * matriz, int source, int target){
-	int infinito = 2147483647, i, dist[matriz->tamanho], previous[matriz->tamanho], u;
+	int infinito = 2147483647, i, dist[matriz->tamanho], previous[matriz->tamanho], u, hacaminho = 0;
 	struct descheap * q = initheap(matriz->tamanho + 2);
 
 	for(i = 0 ; i < matriz->tamanho ; i++){
@@ -327,11 +352,19 @@ int dijkstra(struct matrizadjacencia * matriz, int source, int target){
 	dist[source] = 0;
 	setvalor(q, &dist[source], source);
 	
-	while(q->elementos > 0){
+	while(q->elementos > 0 && hacaminho == 0){
 		u = deleteheap(q);
+		
+		if(u == target){
+			hacaminho = 1;
+		}
 		
 		if(u == -1){
 			return -1;
+		}
+		
+		if(dist[u] == infinito && hacaminho == 0){
+			break;
 		}
 		
 		for(i = 0 ; i < matriz->tamanho ; i++){
@@ -345,13 +378,24 @@ int dijkstra(struct matrizadjacencia * matriz, int source, int target){
 		}
 	}
 	
-	i = target;
-	printf("{\"menorcaminho\":{\"ID1\":%d, \"ID2\":%d, \"caminho\":[", source, target);
-	while(i != source){
-		printf("%d,", i);
-		i = previous[i];
+	if(hacaminho){
+		descpilha * resposta = initpilha();
+		i = target;
+		while(i != source){
+			push(i, resposta);
+			i = previous[i];
+		}
+		push(source, resposta);
+		printf("{\"menorcaminho\":{\"ID1\":%d, \"ID2\":%d,\"caminho\":[", source, target);
+		while(resposta->tamanho > 1){
+			printf("%d,", pop(resposta));
+		}
+		printf("%d],\"custo\":%d}}\n", pop(resposta), dist[target]);
+		free(resposta);
 	}
-	printf("%d],\"custo\":%d}}\n", source, dist[target]);
+	else{
+		printf("{\"menorcaminho\":{\"ID1\":%d, \"ID2\":%d,\"caminho\":[],\"custo\":}}\n", source, target);
+	}
 
 	free(q);
 	return 1;
