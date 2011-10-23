@@ -350,9 +350,10 @@ int dijkstra(struct matrizadjacencia * matriz, int source, int target){
 		insereheap(q, &dist[i], i);
 	}
 	dist[source] = 0;
-	setvalor(q, &dist[source], source);
+	heapando(q, 1);
 	
 	while(q->elementos > 0){
+		heapando(q, 1);
 		u = deleteheap(q);
 				
 		if(u == -1){
@@ -367,7 +368,6 @@ int dijkstra(struct matrizadjacencia * matriz, int source, int target){
 			if(conexaosemprint(matriz, u, i)){
 				if(dist[i] > dist[u] + matriz->matriz[u][i]){
 					dist[i] = dist[u] + matriz->matriz[u][i];
-					setvalor(q, &dist[i], i);
 					previous[i] = u;
 				}
 			}
