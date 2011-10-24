@@ -172,62 +172,72 @@ int imprimematrizadjacencia(struct matrizadjacencia * matriz){
 	return 1;
 }
 
-int verificagrau(struct aresta * arestas, int vertice){
-	int cont = 0, i = 0;
+int verificagrau(matrizadjacencia * matriz, int vertice){
+	int i;
 	
-	while(arestas[i].v1 != -1){
-		if(arestas[i++].v2 == vertice){
-			cont++;
+	for(i = 0 ; i < matriz->tamanho ; i++){
+		if(matriz->matriz[i][vertice] > 0){
+			return 1;
 		}
 	}
-	
-	return cont;
+	return 0;
 }
 
 int ordemtopologica(struct matrizadjacencia * matriz){
+	if(matriz == NULL){
+		return 0;
+	}
 	fila * s = initfila();
-	aresta * arestas = pegaarestas(matriz);
-	int i, aux, arestastam, l[matriz->tamanho], ltam = 0;
-		
-	for(i = 0 ; i < matriz->tamanho ; i++){
-		if(verificagrau(arestas, i) == 0){
-			filainsere(i, s);
+	int j, i, l[matriz->tamanho], ltam = 0, ciclico = 0;
+	matrizadjacencia * novamatriz = criamatrizadjacencia(matriz->tamanho);
+	
+	for(i=0;i<novamatriz->tamanho;i++){
+		for(j=0;j<novamatriz->tamanho;j++){
+			novamatriz->matriz[i][j] = matriz->matriz[i][j];
 		}
 	}
 	
-	for(i = 0 ; arestas[i].v1 != -1 ; i++){
+	for(i = 0 ; i < novamatriz->tamanho ; i++){
+		if(!verificagrau(novamatriz, i)){
+			filainsere(i, s);
+		}
 	}
-	arestastam = i;
 
 	while(s->tamanho > 0){
 		l[ltam++] = filaretira(s);
-		
-		for(i = 0 ; i < arestastam ; i++){
-			if(arestas[i].v1 == l[ltam-1]){
-				arestas[i].v1 = -2;
-				aux = arestas[i].v2;
-				arestas[i].v2 = -2;
-				if(verificagrau(arestas, aux) == 0){
-					filainsere(aux, s);
+		for(i = 0 ; i < novamatriz->tamanho ; i++){
+			if(novamatriz->matriz[l[ltam-1]][i] > 0){
+				novamatriz->matriz[l[ltam-1]][i] = 0;
+				if(!verificagrau(novamatriz, i)){
+					filainsere(i, s);
 				}
 			}
 		}
 	}
-	ltam--;
-
-	for(i = 0 ; i < arestastam ; i++){
-		if(arestas[i].v1 > -1){
-			return -1;
+	
+	for(i = 0 ; i < novamatriz->tamanho ; i++){
+		if(ciclico){
+			break;
+		}
+		for(j = 0 ; j < novamatriz->tamanho ; j++){
+			if(novamatriz->matriz[i][j] > 0){
+				ciclico = 1;
+				break;
+			}
 		}
 	}
 	
-	printf("{\"ordemtop\":[");
-	for(i=0;i<ltam;i++){
-		printf("%d,", l[i]);
+	if(!ciclico){
+		ltam += -1;
+		printf("{\"ordemtop\":[");
+		for(i = 0 ; i < ltam ; i++){
+			printf("%d,", l[i]);
+		}
+		printf("%d]}\n", l[i]);
 	}
-	printf("%d]}\n", l[i]);
 	
 	free(s);
+	free(novamatriz);
 	return 1;
 }
 
