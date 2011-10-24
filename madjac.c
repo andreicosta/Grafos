@@ -341,7 +341,11 @@ int kruskal(struct matrizadjacencia * matriz, struct aresta * arestas){
 }
 
 int dijkstra(struct matrizadjacencia * matriz, int source, int target){
-	int infinito = 2147483647, i, dist[matriz->tamanho], previous[matriz->tamanho], u;
+	if(matriz == NULL){
+		return 0;
+	}
+	register int infinito = 2147483647, i, u;
+	int dist[matriz->tamanho], previous[matriz->tamanho];
 	struct descheap * q = initheap(matriz->tamanho + 2);
 
 	for(i = 0 ; i < matriz->tamanho ; i++){
@@ -355,12 +359,12 @@ int dijkstra(struct matrizadjacencia * matriz, int source, int target){
 	while(q->elementos > 0){
 		heapando(q, 1);
 		u = deleteheap(q);
-				
-		if(u == -1){
-			return -1;
+		
+		if(u <= -1 || u >= matriz->tamanho){
+			break;
 		}
 		
-		if(dist[u] == infinito){
+		if(dist[u] == infinito || dist[u] < 0 ){
 			break;
 		}
 		
@@ -391,7 +395,6 @@ int dijkstra(struct matrizadjacencia * matriz, int source, int target){
 			printf("%d,", pop(resposta));
 		}
 		printf("%d],\"custo\":%d}}\n", pop(resposta), dist[target]);
-		
 		free(resposta);
 	}
 	else{
