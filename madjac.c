@@ -3,8 +3,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+//implementação a gosto
+#include "matriz.h"
+#include "pilha.h"
+#include "heap.h"
+#include "cdisj.h"
+#include "fila.h"
 
-matrizadjacencia * criamatrizadjacencia(int tamanhoinicial){
+struct matrizadjacencia * criamatrizadjacencia(int tamanhoinicial){
 	int i, j;
 	struct matrizadjacencia * novo = (struct matrizadjacencia *) malloc(sizeof(struct matrizadjacencia));
 	
@@ -36,8 +42,8 @@ matrizadjacencia * criamatrizadjacencia(int tamanhoinicial){
 }
 
 int adicionavertice(struct matrizadjacencia * matriz, int id, char * nome){
-	if(matriz == NULL || matriz->vetor == NULL || nome == NULL || matriz->tamanho <= id)
-		return -1;
+	if(matriz == NULL || matriz->vetor == NULL || nome == NULL || matriz->tamanho <= id || id < 0)
+		return 0;
 	
 	matriz->vetor[id] = (char *) malloc(sizeof(char)*50);
 	strcpy(matriz->vetor[id],nome);
@@ -45,9 +51,9 @@ int adicionavertice(struct matrizadjacencia * matriz, int id, char * nome){
 }
 
 int delete(struct matrizadjacencia * matriz, int id){
-	if(matriz->tamanho <= id || matriz->vetor[id] == NULL){
+	if(matriz->tamanho <= id || matriz->vetor[id] == NULL || id < 0){
 		printf("{\"delete\":{\"ID\":%d,\"resposta\":\"falha\"}}\n", id);
-		return -1;
+		return 0;
 	}
 	
 	matriz->vetor[id] = NULL;
@@ -64,13 +70,13 @@ int vizinhos(struct matrizadjacencia * matriz, int id, int direcionado){
 	int cont = 0, i, * lista = malloc(sizeof(int) * matriz->tamanho + 1), primeiro = 1;
 	
 	if(direcionado){
-		for(i=0;i<matriz->tamanho;i++)
+		for(i = 0 ; i < matriz->tamanho ; i++)
 			if((matriz->matriz[id][i] > 0 || matriz->matriz[i][id] > 0) && matriz->vetor[i] != NULL)
 				lista[cont++] = i;
 	}
 	else{
-		for(i=0;i<matriz->tamanho;i++)
-			if(matriz->matriz[id][i] > 0 && matriz->vetor[i] != NULL)
+		for(i = 0 ; i < matriz->tamanho ; i++)
+			if(matriz->matriz[id][i] && matriz->vetor[i] != NULL)
 				lista[cont++] = i;
 	}
 	lista[cont] = -1;
@@ -135,8 +141,9 @@ int get(struct matrizadjacencia * matriz, int id){
 }
 
 int adicionaaresta(struct matrizadjacencia * matriz, int v1, int v2, int peso, int direcionado){
-	if(matriz == NULL || matriz->vetor == NULL || matriz->vetor[v1] == NULL || matriz->vetor[v2] == NULL || matriz->tamanho <= v1 || matriz->tamanho <= v2)
+	if(matriz == NULL || matriz->vetor == NULL || matriz->vetor[v1] == NULL || matriz->vetor[v2] == NULL || matriz->tamanho <= v1 || matriz->tamanho <= v2){
 		return 0;
+	}
 	
 	if(direcionado == 1){
 		matriz->matriz[v1][v2] = peso;
@@ -172,81 +179,89 @@ int imprimematrizadjacencia(struct matrizadjacencia * matriz){
 	return 1;
 }
 
-int verificagrau(matrizadjacencia * matriz, int vertice){
+int verificagrau(struct matrizadjacencia * matriz, int vertice){
+	if(matriz == NULL || matriz->vetor == NULL || matriz->matriz == NULL || vertice < 0 || vertice >= matriz->tamanho){
+		return -1;
+	}
+	
 	int i;
 	
 	for(i = 0 ; i < matriz->tamanho ; i++){
-		if(matriz->matriz[i][vertice] > 0){
+		if(matriz->matriz[i][vertice]){
 			return 1;
 		}
 	}
+
 	return 0;
 }
 
 int ordemtopologica(struct matrizadjacencia * matriz){
-	if(matriz == NULL){
+	if(matriz == NULL || matriz->matriz == NULL || matriz->vetor == NULL){
 		return 0;
 	}
-	fila * s = initfila();
-	int j, i, l[matriz->tamanho], ltam = 0, ciclico = 0;
-	matrizadjacencia * novamatriz = criamatrizadjacencia(matriz->tamanho);
 	
-	for(i=0;i<novamatriz->tamanho;i++){
-		for(j=0;j<novamatriz->tamanho;j++){
-			novamatriz->matriz[i][j] = matriz->matriz[i][j];
-		}
+	Queue s = CreateQueue(matriz->tamanho);
+	int jausado[matriz->tamanho], l[matriz->tamanho];
+	register int j, i, ltam = 0;
+	struct matrizadjacencia * novamatriz = criamatrizadjacencia(matriz->tamanho);
+	
+	if(novamatriz == NULL){
+		return 0;
 	}
 	
 	for(i = 0 ; i < novamatriz->tamanho ; i++){
-		if(!verificagrau(novamatriz, i)){
-			filainsere(i, s);
-		}
-	}
-
-	while(s->tamanho > 0){
-		l[ltam++] = filaretira(s);
-		for(i = 0 ; i < novamatriz->tamanho ; i++){
-			if(novamatriz->matriz[l[ltam-1]][i] > 0){
-				novamatriz->matriz[l[ltam-1]][i] = 0;
-				if(!verificagrau(novamatriz, i)){
-					filainsere(i, s);
-				}
+		jausado[i] = 0;
+		for(j = 0 ; j < novamatriz->tamanho ; j++){
+			if(matriz->vetor[i] != NULL && matriz->vetor[j] != NULL){
+				novamatriz->matriz[i][j] = matriz->matriz[i][j];
 			}
 		}
 	}
 	
-	for(i = 0 ; i < novamatriz->tamanho ; i++){
-		if(ciclico){
+	while(ltam <= novamatriz->tamanho){
+		for(i = 0 ; i < novamatriz->tamanho ; i++){
+			if(matriz->vetor[i] != NULL && verificagrau(novamatriz, i) == 0 && jausado[i] == 0){
+				Enqueue(i, s);
+				jausado[i] = 1;
+			}
+		}
+		
+		if(IsEmpty(s)){
 			break;
 		}
-		for(j = 0 ; j < novamatriz->tamanho ; j++){
-			if(novamatriz->matriz[i][j] > 0){
-				ciclico = 1;
-				break;
+		
+		while(!IsEmpty(s)){
+			l[ltam] = FrontAndDequeue(s);
+			
+			for(i = 0 ; i < novamatriz->tamanho ; i++){
+				novamatriz->matriz[l[ltam]][i] = 0;
 			}
+			ltam++;
 		}
 	}
 	
-	if(!ciclico){
-		ltam += -1;
+	if(ltam > 0){
+		ltam--;
 		printf("{\"ordemtop\":[");
 		for(i = 0 ; i < ltam ; i++){
 			printf("%d,", l[i]);
 		}
 		printf("%d]}\n", l[i]);
-	}
-	
+	}	
+
 	free(s);
 	free(novamatriz);
 	return 1;
 }
 
-void merge(aresta * vetor, int tamanho) {
+int merge(struct aresta * vetor, int tamanho) {
 	int i, j, k;
-	aresta * temp;
- 
-	temp = malloc(sizeof(aresta) * tamanho);
- 
+	aresta * temp = malloc(sizeof(aresta) * tamanho);
+
+	if(temp == NULL || vetor == NULL){
+		return 0;
+	}
+
 	i = 0;
 	j = tamanho/2;
 	k = 0;
@@ -273,85 +288,112 @@ void merge(aresta * vetor, int tamanho) {
 	for(i = 0; i < tamanho; ++i){
 		vetor[i] = temp[i];
 	}
+	return 1;
 }
  
-void mergesort(aresta * vetor, int tamanho) {
+int mergesort(struct aresta * vetor, int tamanho) {
+	if(vetor == NULL){
+		return 0;
+	}
+	
 	if(tamanho > 1){
 		mergesort(vetor, tamanho/2);
 		mergesort(vetor + tamanho/2, tamanho - tamanho/2);
 		merge(vetor, tamanho);
 	}
+	
+	return 1;
 }
 
-aresta * arestasordenadas(struct aresta * vetor){
-	int tamanho;
-	
-	for(tamanho = 0 ; vetor[tamanho].v1 != -1 && vetor[tamanho].v2 != -1 && vetor[tamanho].peso != -1 && vetor!=NULL; tamanho++){
+struct vetoraresta * arestasordenadas(struct vetoraresta * vetor){
+	if(vetor == NULL || vetor->comeco == NULL){
+		return NULL;
 	}
-	
-	mergesort(vetor, tamanho);
+
+	mergesort(vetor->comeco, vetor->tamanho);
 	
 	return vetor;
 }
 
-aresta * pegaarestas(struct matrizadjacencia * matriz){
+struct vetoraresta * pegaarestas(struct matrizadjacencia * matriz){
+	if(matriz == NULL || matriz->vetor == NULL || matriz->matriz == NULL){
+		return NULL;
+	}
 	int i, j, tamanho = 0, cont = 0;
+	int * help1 = malloc(sizeof(int) * matriz->tamanho * matriz->tamanho);
+	int * help2 = malloc(sizeof(int) * matriz->tamanho * matriz->tamanho);
+	
+	if(help1 == NULL || help2 == NULL){
+		return NULL;
+	}
 	
 	for(i = 0 ; i < matriz->tamanho ; i++){
 		for(j = 0 ; j < matriz->tamanho ; j++){
-			if(matriz->matriz[i][j] > 0 && matriz->vetor[i] != NULL && matriz->vetor[j] != NULL){
-				tamanho++;
+			if(matriz->matriz[i][j] && matriz->vetor[i] != NULL && matriz->vetor[j] != NULL){
+				help1[tamanho] = i;
+				help2[tamanho++] = j;
 			}
 		}
 	}
-	aresta * arestas = malloc(sizeof(aresta) * tamanho + 2);
-	for(i = 0 ; i < matriz->tamanho ; i++){
-		for(j = 0 ; j < matriz->tamanho ; j++){
-			if(matriz->matriz[i][j] > 0 && matriz->vetor[i] != NULL && matriz->vetor[j] != NULL){
-				arestas[cont].v1 = i;
-				arestas[cont].v2 = j;
-				arestas[cont++].peso = matriz->matriz[i][j];
-			}
-		}
-	}
-	arestas[tamanho].v1 = -1;
-	arestas[tamanho].v2 = -1;
-	arestas[tamanho].peso = -1;
 	
+	vetoraresta * arestas = malloc(sizeof(vetoraresta));
+	arestas->tamanho = tamanho;
+	arestas->comeco = malloc(sizeof(aresta) * tamanho);
+	aresta * temp = arestas->comeco;
+	
+	if(temp == NULL || arestas == NULL){
+		return NULL;
+	}
+	
+	for(i = 0 ; i < tamanho ; i++){
+		temp[cont].v1 = help1[cont];
+		temp[cont].v2 = help2[cont];
+		temp[cont].peso = matriz->matriz[help1[cont]][help2[cont]];
+		cont++;
+	}
+	
+	free(help1);
+	free(help2);
 	return arestas;
 }
 
-int kruskal(struct matrizadjacencia * matriz, struct aresta * arestas){
-	aresta * t = malloc(sizeof(aresta) * matriz->tamanho * matriz->tamanho);
+int kruskal(struct matrizadjacencia * matriz, struct vetoraresta * arestas){	
+	if(matriz == NULL || matriz->matriz == NULL || matriz->vetor == NULL || arestas == NULL){
+		return 0;
+	}
+	
+	int * ta = malloc(sizeof(int) * matriz->tamanho * matriz->tamanho);
+	int * tb = malloc(sizeof(int) * matriz->tamanho * matriz->tamanho);
 	int tamt = 0, i, custo = 0;
-	descpilha * pilha = initpilha();
-	cdisj * cd = initcdisj(matriz->tamanho);
-
+	struct cdisj * cd = initcdisj(matriz->tamanho);
+	struct aresta * lista = arestas->comeco;
+	
 	for(i = 0 ; i < matriz->tamanho ; i++){
 		makeset(cd, i);
 	}
 	
-	for(i = 0; arestas[i].v1 != -1 && arestas[i].v2 != -1 && arestas[i].peso != -1 ; i++){
-		if(find(cd, arestas[i].v1) != find(cd, arestas[i].v2)){
-			t[tamt++] = arestas[i];
-			custo += arestas[i].peso;
-			unionc(cd, arestas[i].v1, arestas[i].v2);
+	for(i = 0; i < arestas->tamanho ; i++){
+		if(find(cd, lista[i].v1) != find(cd, lista[i].v2)){
+			ta[tamt] = lista[i].v1;
+			tb[tamt++] = lista[i].v2;
+			custo += lista[i].peso;
+			unionc(cd, lista[i].v1, lista[i].v2);
 		}
 	}
 	
 	printf("{\"arvoreminima\":{\"arestas\":[");
 	for(i = 0 ; i < tamt - 1 ; i++){
-		printf("(%d,%d),", t[i].v1, t[i].v2);
+		printf("(%d,%d),", ta[i], tb[i]);
 	}
-	printf("(%d,%d)],\"custo\":%d}}\n", t[tamt-1].v1, t[tamt-1].v2, custo);
+	printf("(%d,%d)], \"custo\":%d}}\n", ta[tamt-1], tb[tamt-1], custo);
 
+	free(lista);
 	free(cd);
-	free(pilha);
 	return 1;
 }
 
 int dijkstra(struct matrizadjacencia * matriz, int source, int target){
-	if(matriz == NULL){
+	if(matriz == NULL || matriz->matriz == NULL || matriz->vetor == NULL || source < 0 || target < 0 || source >= matriz->tamanho || target >= matriz->tamanho){
 		return 0;
 	}
 	register int infinito = 2147483647, i, u;
@@ -359,22 +401,20 @@ int dijkstra(struct matrizadjacencia * matriz, int source, int target){
 	struct descheap * q = initheap(matriz->tamanho + 2);
 
 	for(i = 0 ; i < matriz->tamanho ; i++){
-		dist[i] = infinito;
-		previous[i] = -1;
-		insereheap(q, &dist[i], i);
+		if(matriz->vetor[i] != NULL){
+			dist[i] = infinito;
+			previous[i] = -1;
+			insereheap(q, &dist[i], i);
+		}
 	}
 	dist[source] = 0;
 	heapando(q, 1);
 	
-	while(q->elementos > 0){
+	while(q->elementos){
 		heapando(q, 1);
 		u = deleteheap(q);
 		
-		if(u <= -1 || u >= matriz->tamanho){
-			break;
-		}
-		
-		if(dist[u] == infinito || dist[u] < 0 ){
+		if(u <= -1 || u >= matriz->tamanho || dist[u] == infinito || dist[u] < 0 ){
 			break;
 		}
 		
@@ -418,7 +458,7 @@ int dijkstra(struct matrizadjacencia * matriz, int source, int target){
 int leitor(){
 	int n, i, onde, direcionado = -1, v1, v2, peso, aux1, aux2;
 	char * lido = malloc(sizeof(char) * 10), * nome = malloc(sizeof(char) * 50);
-	matrizadjacencia * matriz = NULL;
+	struct matrizadjacencia * matriz = NULL;
 
 	scanf("%s", lido);
 
