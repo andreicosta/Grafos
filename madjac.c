@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-//implementação a gosto
+//implementação fica a gosto do cara
 #include "matriz.h"
 #include "pilha.h"
 #include "heap.h"
@@ -249,7 +249,7 @@ int ordemtopologica(struct matrizadjacencia * matriz){
 		printf("%d]}\n", l[i]);
 	}	
 
-	free(s);
+	DisposeQueue(s);
 	free(novamatriz);
 	return 1;
 }
