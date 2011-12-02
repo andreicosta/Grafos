@@ -195,6 +195,7 @@ int verificagrau(struct matrizadjacencia * matriz, int vertice){
 	return 0;
 }
 
+//se os elementos estiverem no mesmo nível topológico eles serão impressos de forma crescente pelo seu número de id
 int ordemtopologica(struct matrizadjacencia * matriz){
 	if(matriz == NULL || matriz->matriz == NULL || matriz->vetor == NULL){
 		return 0;
@@ -452,82 +453,5 @@ int dijkstra(struct matrizadjacencia * matriz, int source, int target){
 	}
 	
 	free(q);
-	return 1;
-}
-
-int leitor(){
-	int n, i, onde, direcionado = -1, v1, v2, peso, aux1, aux2;
-	char * lido = malloc(sizeof(char) * 10), * nome = malloc(sizeof(char) * 50);
-	struct matrizadjacencia * matriz = NULL;
-
-	scanf("%s", lido);
-
-	if(!strcmp(lido, "*Vertices")){
-		scanf("%d", &n);
-		matriz = criamatrizadjacencia(n);
-		for(i = 0 ; i < n ; i++){
-			scanf("%d", &onde);
-			scanf("%[ ]", nome);
-			scanf("%[^\n]", nome);
-			adicionavertice(matriz, onde, nome);
-		}
-
-		scanf("%s", lido);
-		
-		if(!strcmp(lido, "*Edges")){
-			direcionado = 0;
-		}
-		if(!strcmp(lido, "*Arcs")){
-			direcionado = 1;
-		}
-		if(direcionado == -1){
-			return 0;
-		}
-		
-		scanf("%s", lido);
-		
-		while(lido != NULL && lido[0] != '*'){
-			v1 = atoi(lido);
-			scanf("%s", lido);
-			v2 = atoi(lido);
-			scanf("%s", lido);
-			peso = atoi(lido);
-			adicionaaresta(matriz, v1, v2, peso, direcionado);
-			scanf("%s", lido);
-		}
-	}
-	
-	if(!strcmp(lido, "*Queries")){
-		while(scanf("%s", lido) != EOF){
-			if(!strcmp(lido, "get")){
-				scanf("%d", &aux1);
-				get(matriz, aux1);				
-			}
-			if(!strcmp(lido, "delete")){
-				scanf("%d", &aux1);
-				delete(matriz, aux1);
-			}
-			if(!strcmp(lido, "vizinhos")){
-				scanf("%d", &aux1);
-				vizinhos(matriz, aux1, direcionado);
-			}
-			if(!strcmp(lido, "conexao")){
-				scanf("%d", &aux1);
-				scanf("%d", &aux2);	
-				conexao(matriz, aux1, aux2);
-			}
-			if(!strcmp(lido, "ordemtopologica")){
-				ordemtopologica(matriz);
-			}
-			if(!strcmp(lido, "arvoreminima")){
-				kruskal(matriz, arestasordenadas(pegaarestas(matriz)));
-			}
-			if(!strcmp(lido, "menorcaminho")){
-				scanf("%d", &aux1);
-				scanf("%d", &aux2);
-				dijkstra(matriz, aux1, aux2);
-			}
-		}
-	}
 	return 1;
 }
